@@ -1,4 +1,4 @@
-使用LSB算法通过matlab将图片和“57117119魏浩男”的文本信息以矩阵形式读入，然后使用LSB算法将随机选择出的载体图片的像素点替换为文本信息数据。
+隐藏信息：使用LSB算法通过matlab将图片和“57117119魏浩男”的文本信息以矩阵形式读入，然后使用LSB算法将随机选择出的载体图片的像素点替换为文本信息数据。
 
 function [ste_cover,len_total]=rand_lsb_hide(input,file,output,key)
 %读入图像矩阵
@@ -72,3 +72,32 @@ for i=2:count
     col(1,i)=c;
 end
 
+提取隐藏的信息：使用matlab读入隐藏了信息的图片后使用相同的种子再次调用信息隐藏时用来选择替换像素点的随机数生成函数，将这些被替换的位置的数据写到一个文本文件只已达到隐藏信息提取的目的。
+function result = rand_lsb_get(output,len_total,goalfile,key)
+ste_cover=imread(output);
+ste_cover=double(ste_cover);
+%判断嵌入信息量是否过大
+[m,n]=size(ste_cover);
+if len_total>m*n
+  error('嵌入信息量过大，请重新选择图像');
+end
+frr=fopen(goalfile,'a');
+%p作为消息嵌入位计数器,将消息序列写回文本文件
+p=1;
+%调用随机间隔函数选取像素点
+[row,col]=randinterval(ste_cover,len_total,key);
+for i=1 :len_total
+    if bitand(ste_cover(row(i),col(i)),1)==1
+        fwrite(frr,1,'ubit1');
+        result(p,1)=1;
+    else
+        fwrite(frr,0,'ubit1');
+        result(p,1)=0;
+    end
+    if p ==len_total
+        break;
+    end
+    p=p+1;
+end
+fclose(frr);
+end
